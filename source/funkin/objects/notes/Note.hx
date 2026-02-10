@@ -533,7 +533,7 @@ class Note extends NoteObject {
 			loadIndNoteAnims();
 		} else {
 			frames = Paths.getSparrowAtlas(textureKey);
-			loadNoteAnims();
+			frames != null ? loadNoteAnims() : loadGraphic(Paths.image(textureKey));
 		}
 
 		if (inEditor)
