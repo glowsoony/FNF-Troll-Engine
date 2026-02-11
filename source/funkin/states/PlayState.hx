@@ -1,6 +1,6 @@
 package funkin.states;
 
-import funkin.objects.notes.NoteAnimation;
+import funkin.objects.notes.NoteAnimations;
 import funkin.objects.cutscenes.Cutscene;
 #if VIDEOS_ALLOWED
 import funkin.objects.cutscenes.VideoCutscene;
@@ -686,7 +686,7 @@ class PlayState extends MusicBeatState
 		songTrackNames = getChartTrackNames();
 
 		PlayState.keyCount = SONG.keyCount;
-		NoteAnimation.refreshKeyAnimations(keyCount);
+		NoteAnimations.refreshKeyAnimations(keyCount);
 
 		updateKeybinds();
 

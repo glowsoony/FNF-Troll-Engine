@@ -526,15 +526,8 @@ class Note extends NoteObject {
 		if (wasQuant != isQuant)
 			updateColours();
 
-		if (vInd > 0 && hInd > 0) {
-			var graphic = Paths.image(textureKey);
-			setSize(graphic.width / hInd, graphic.height / vInd);
-			loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
-			loadIndNoteAnims();
-		} else {
-			frames = Paths.getSparrowAtlas(textureKey);
-			frames != null ? loadNoteAnims() : loadGraphic(Paths.image(textureKey));
-		}
+		frames = Paths.getSparrowAtlas(textureKey);
+		frames != null ? loadNoteAnims() : loadGraphic(Paths.image(textureKey));
 
 		if (inEditor)
 			setGraphicSize(ChartingState.GRID_SIZE, ChartingState.GRID_SIZE);
@@ -548,42 +541,6 @@ class Note extends NoteObject {
 
 		if (noteScript != null)
 			noteScript.executeFunc("postReloadNote", [this, texture, suffix], this);
-	}
-
-	public function loadIndNoteAnims() {
-		var changed = false;
-
-		if (noteScript != null && noteScript.exists("loadIndNoteAnims")) {
-			noteScript.executeFunc("loadIndNoteAnims", [this], this, ["super" => _loadIndNoteAnims]);
-			changed = true;
-		}
-
-		if (genScript != null && genScript.exists("loadIndNoteAnims")) {
-			genScript.executeFunc("loadIndNoteAnims", [this], this, ["super" => _loadIndNoteAnims, "noteTypeLoaded" => changed]);
-			changed = true;
-		}
-
-		if (!changed)
-			_loadIndNoteAnims();
-	}
-
-	function _loadIndNoteAnims() {
-		final animName:String = 'default';
-		final animFrames:Array<Int> = switch (holdType) {
-			default: [
-					NoteObject.getAnimsInd(column, NoteAnimations.fourKey.noteAnimations, NoteAnimations.fourKey.noteAnimations) + 4
-				];
-			case PART: [
-					NoteObject.getAnimsInd(column, NoteAnimations.fourKey.holdAnimations, NoteAnimations.fourKey.holdAnimations)
-				];
-			case END: [
-					NoteObject.getAnimsInd(column, NoteAnimations.fourKey.tailAnimations, NoteAnimations.fourKey.tailAnimations) + 4
-				];
-		}
-		animation.add(animName, animFrames);
-		animation.play(animName, true);
-
-		// scale.set(6, 6); // causd mines to be huge lol
 	}
 
 	public function loadNoteAnims() {
