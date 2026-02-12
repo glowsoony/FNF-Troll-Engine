@@ -1940,13 +1940,14 @@ class PlayState extends MusicBeatState
 
 		var reBind:Bool = false;
 		for (opt in options) {
-			if (opt.startsWith("bind")) {
+			if (opt.startsWith('bind-')) {
 				reBind = true;
 				break;
 			}
 		}
 
 		if (reBind) {
+			trace("Updating key binds");
 			updateKeybinds();
 
 			// unpress everything
