@@ -461,6 +461,20 @@ class CoolUtil {
         return inst;
     }
 
+	public static function formatMemory(Bytes:Float):String {
+		var units:Int = 0;
+		while (Bytes >= 1024) {
+			Bytes /= 1024;
+			units++;
+		}
+
+		return Math.round(Bytes * 100) / 100 + switch (units) {
+			case 0: "Bytes";
+			case 1: "kB";
+			case 2: "MB";
+			default: "GB";
+		};
+	}
 
 	////
 	#if ALLOW_DEPRECATION
