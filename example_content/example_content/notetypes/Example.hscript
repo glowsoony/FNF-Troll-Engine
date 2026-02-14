@@ -1,10 +1,14 @@
+function onLoad(){
+    trace("This is called when PlayState first loads the script, usually used for preloading etc");
+}
+
 function setupNote(note:Note){
     trace("Called when the note's noteType is set");
     note.canQuant = false;
     note.reloadNote("", "NOTE_assets");
     note.colorSwap.hue = 0;
     note.colorSwap.saturation = 0;
-    note.colorSwap.lightness = 0;
+    note.colorSwap.brightness = 0;
 }
 
 function onReloadNote(note:Note, prefix:String, texture:String, suffix:String){
@@ -61,15 +65,9 @@ function update(elapsed:Float){
     trace("Called every frame the notetype is active");
 }
 
-function noteUpdate(elapsed:Float){
+function noteUpdate(note:Note, elapsed:Float){
     // gets called by every spawned note per frame, so do this for stuff that should affect each note individually.
-
-    // 'this' refers to the current note
-    trace("Called every frame the note is active, strumtime: " + this.strumTime);
-}
-
-function onLoad(){
-    trace("This is called when PlayState first loads the script, usually used for preloading etc");
+    trace("Called every frame the note is active, strumtime: " + note.strumTime);
 }
 
 function spawnNote(note:Note){

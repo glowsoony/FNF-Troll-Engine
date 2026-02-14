@@ -3025,11 +3025,11 @@ class PlayState extends MusicBeatState
 			return null;
 
 		var mutatedJudgeData:JudgmentData = Reflect.copy(judgeData);
-		if (note.noteScript != null){
-			var ret:Dynamic = note.noteScript.call("mutateJudgeData", [note, mutatedJudgeData]);
-			if (ret != null && ret != Globals.Function_Continue)
-				mutatedJudgeData = cast ret;
-		}
+
+		var ret:Dynamic = note.noteScript?.call("mutateJudgeData", [note, mutatedJudgeData]);
+		if (ret != null && ret != Globals.Function_Continue)
+			mutatedJudgeData = cast ret;
+
 		var ret:Dynamic = callOnScripts("mutateJudgeData", [note, mutatedJudgeData]);
 		if (ret != null && ret != Globals.Function_Continue)
 			mutatedJudgeData = cast ret; // so you can return your own custom judgements or w/e
