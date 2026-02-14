@@ -602,8 +602,8 @@ class Note extends NoteObject {
 		if (inEditor)
 			return;
 
-		noteScript?.executeFunc("noteUpdate", [elapsed]);
-		genScript?.executeFunc("noteUpdate", [elapsed]);
+		noteScript?.executeFunc("noteUpdate", [this, elapsed]);
+		genScript?.executeFunc("noteUpdate", [this, elapsed]);
 
 		if (hitByOpponent)
 			wasGoodHit = true;

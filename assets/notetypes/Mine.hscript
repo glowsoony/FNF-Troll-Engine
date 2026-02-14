@@ -10,6 +10,6 @@ function goodNoteHit(note:Note){
     FlxG.sound.play(Paths.sound("mineExplode"));
 }
 
-function noteUpdate(elapsed:Float){
-    this.typeOffsetAngle += elapsed;
+function noteUpdate(note:Note, elapsed:Float){
+	note.typeOffsetAngle = (Conductor.songPosition / 1000) * 75;
 }
