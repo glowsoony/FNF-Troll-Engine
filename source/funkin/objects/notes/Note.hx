@@ -522,13 +522,11 @@ class Note extends NoteObject {
 
 		frames = Paths.getSparrowAtlas(textureKey);
 		frames != null ? loadNoteAnims() : loadGraphic(Paths.image(textureKey));
-
 		if (inEditor)
 			setGraphicSize(ChartingState.GRID_SIZE, ChartingState.GRID_SIZE);
 
 		defScale.copyFrom(scale);
 		updateHitbox();
-
 		////
 		genScript?.executeFunc("onReloadNotePost", [this, texture, suffix]);
 		noteScript?.executeFunc("onReloadNotePost", [this, texture, suffix]);
@@ -537,6 +535,7 @@ class Note extends NoteObject {
 	public function loadNoteAnims() {
 		var changed = false;
 
+		trace("FUCK 1");
 		if (noteScript != null && noteScript.exists("onLoadNoteAnims")) {
 			noteScript.executeFunc("onLoadNoteAnims", [this], null, ["super" => _loadNoteAnims]);
 			changed = true;
@@ -550,9 +549,8 @@ class Note extends NoteObject {
 		if (!changed)
 			_loadNoteAnims();
 
-		noteScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["noteAnimsChanged" => changed]);
-		genScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["noteAnimsChanged" => changed]);
-
+		noteScript?.executeFunc("onLoadNoteAnimsPost", [this], null, ["noteAnimsChanged" => changed]);
+		genScript?.executeFunc("onLoadNoteAnimsPost", [this], null, ["noteAnimsChanged" => changed]);
 
 	}
 
