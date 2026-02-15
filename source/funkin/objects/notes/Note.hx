@@ -535,7 +535,6 @@ class Note extends NoteObject {
 	public function loadNoteAnims() {
 		var changed = false;
 
-		trace("FUCK 1");
 		if (noteScript != null && noteScript.exists("onLoadNoteAnims")) {
 			noteScript.executeFunc("onLoadNoteAnims", [this], null, ["super" => _loadNoteAnims]);
 			changed = true;
