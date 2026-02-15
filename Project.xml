@@ -140,7 +140,6 @@
 		<haxedef name="openfl-enable-handle-error" />
 	</section>
 		
-	<haxedef name="HXCPP_CPP11" if="desktop cpp" />
 	<haxedef name="NO_PRECOMPILED_HEADERS" if="linux" />
 
 	<!-- <haxedef name="no_traces" if="final"/> -->
