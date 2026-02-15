@@ -1,5 +1,6 @@
 package funkin.objects.notes;
 
+import funkin.data.JudgmentManager.JudgmentData;
 import funkin.scripts.*;
 import funkin.states.PlayState;
 import funkin.states.editors.ChartingState;
@@ -363,7 +364,7 @@ class Note extends NoteObject {
 			else
 				_setupNoteType();
 
-			genScript?.executeFunc("setupNoteType", [this]);
+			genScript?.executeFunc("onNoteTypeSet", [this]);
 		}
 
 		if (usesDefaultColours) {
@@ -380,8 +381,8 @@ class Note extends NoteObject {
 
 		////
 
-		noteScript?.executeFunc("postSetupNote", [this]);
-		genScript?.executeFunc("postSetupNoteType", [this]);
+		noteScript?.executeFunc("onSetupNotePost", [this]);
+		genScript?.executeFunc("onNoteTypeSetPost", [this]);
 
 		////
 		if (isQuant && Paths.imageExists('QUANT' + noteSplashTexture))
@@ -464,10 +465,10 @@ class Note extends NoteObject {
 		tex = texture;
 		texSuffix = suffix;
 
-		genScript?.executeFunc("onReloadNote", [this, texture, suffix]);
-		noteScript?.executeFunc("onReloadNote", [this, texture, suffix]);
-
-		if (genScript?.executeFunc("preReloadNote", [this, texture, suffix]) == Globals.Function_Stop)
+		if (genScript?.executeFunc("onReloadNote", [this, texture, suffix]) == Globals.Function_Stop)
+			return;
+		
+		if (noteScript?.executeFunc("onReloadNote", [this, texture, suffix]) == Globals.Function_Stop)
 			return;
 
 		////
@@ -529,25 +530,30 @@ class Note extends NoteObject {
 		updateHitbox();
 
 		////
-		genScript?.executeFunc("postReloadNote", [this, texture, suffix]);
-		noteScript?.executeFunc("postReloadNote", [this, texture, suffix]);
+		genScript?.executeFunc("onReloadNotePost", [this, texture, suffix]);
+		noteScript?.executeFunc("onReloadNotePost", [this, texture, suffix]);
 	}
 
 	public function loadNoteAnims() {
 		var changed = false;
 
-		if (noteScript != null && noteScript.exists("loadNoteAnims")) {
-			noteScript.executeFunc("loadNoteAnims", [this], null, ["super" => _loadNoteAnims]);
+		if (noteScript != null && noteScript.exists("onLoadNoteAnims")) {
+			noteScript.executeFunc("onLoadNoteAnims", [this], null, ["super" => _loadNoteAnims]);
 			changed = true;
 		}
 
-		if (genScript != null && genScript.exists("loadNoteAnims")) {
-			genScript.executeFunc("loadNoteAnims", [this], null, ["super" => _loadNoteAnims, "noteTypeLoaded" => changed]);
+		if (genScript != null && genScript.exists("onLoadNoteAnims")) {
+			genScript.executeFunc("onLoadNoteAnims", [this], null, ["super" => _loadNoteAnims, "noteTypeLoaded" => changed]);
 			changed = true;
 		}
 
 		if (!changed)
 			_loadNoteAnims();
+
+		noteScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["super" => _loadNoteAnims, "noteAnimsChanged" => changed]);
+		genScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["super" => _loadNoteAnims, "noteAnimsChanged" => changed]);
+
+
 	}
 
 	function _loadNoteAnims() {
@@ -602,8 +608,9 @@ class Note extends NoteObject {
 		if (inEditor)
 			return;
 
-		noteScript?.executeFunc("noteUpdate", [this, elapsed]);
-		genScript?.executeFunc("noteUpdate", [this, elapsed]);
+
+		noteScript?.executeFunc("onNoteUpdate", [this, elapsed]);
+		genScript?.executeFunc("onNoteUpdate", [this, elapsed]);
 
 		if (hitByOpponent)
 			wasGoodHit = true;
@@ -612,4 +619,23 @@ class Note extends NoteObject {
 		if (diff < -ClientPrefs.hitWindow && !wasGoodHit)
 			tooLate = true;
 	}
+
+	/*Note hit callbacks, useful for hardcoding but also makes it easier to see what scripts are calling what*/
+
+	public function transformJudgeData(dataToMutate:JudgmentData): JudgmentData {
+		switch(noteType){
+
+			default:
+				var ret:Dynamic = noteScript?.executeFunc("transformJudgeData", [this]);
+				if (ret != null && ret != null)
+					return cast ret;
+		}
+
+		return dataToMutate;
+	}
+
+
+
+
+
 }

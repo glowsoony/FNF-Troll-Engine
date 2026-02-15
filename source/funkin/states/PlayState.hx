@@ -1640,6 +1640,10 @@ class PlayState extends MusicBeatState
 
 		//// get event names to load
 		var daEvents = getSongEventNotes();
+		var events:Dynamic = callOnScripts('transformEvents', [daEvents]);
+		if (events is Array && events != null) 
+			daEvents = events;
+
 		var eventPushedMap:Map<String, Bool> = [];
 		for (eventNote in daEvents)
 			eventPushedMap.set(eventNote.event, true);
@@ -1710,8 +1714,16 @@ class PlayState extends MusicBeatState
 		if(keyCount == null)
 			keyCount = PlayState.keyCount;
 
+
+		// thanks burgerballs!
+		var chart:Dynamic = callOnScripts('transformChart', [noteData]);
+		if (chart is Array && chart != null) 
+			noteData = chart;
+		
+
 		var offset:Float = ClientPrefs.noteOffset - offset;
 		for (section in noteData) {
+			callOnScripts("onSectionGenerate", [section]);
 			for (noteData in section.sectionNotes) {
 				var daStrumTime:Float = noteData.strumTime;
 				var realColumn:Int = noteData.column;
@@ -2141,7 +2153,7 @@ class PlayState extends MusicBeatState
 		unspawnNotes.remove(dunceNote);
 
 		callOnScripts('onSpawnNotePost', [dunceNote]);
-		dunceNote.noteScript?.call("postSpawnNote", [dunceNote]);
+		dunceNote.noteScript?.call("onSpawnNotePost", [dunceNote]);
 	}
 
 	function field_noteRemoved(note:Note, field:PlayField) {
@@ -3024,15 +3036,12 @@ class PlayState extends MusicBeatState
 		if (callOnScripts("onApplyNoteJudgment", [note, judgeData, bot]) == Globals.Function_Stop)
 			return null;
 
-		var mutatedJudgeData:JudgmentData = Reflect.copy(judgeData);
+		var mutatedJudgeData:JudgmentData =  note.transformJudgeData(Reflect.copy(judgeData));
 
-		var ret:Dynamic = note.noteScript?.call("mutateJudgeData", [note, mutatedJudgeData]);
+		var ret:Dynamic = callOnScripts("transformJudgeData", [note, mutatedJudgeData]);
 		if (ret != null && ret != Globals.Function_Continue)
 			mutatedJudgeData = cast ret;
-
-		var ret:Dynamic = callOnScripts("mutateJudgeData", [note, mutatedJudgeData]);
-		if (ret != null && ret != Globals.Function_Continue)
-			mutatedJudgeData = cast ret; // so you can return your own custom judgements or w/e
+		
 
 		applyJudgmentData(mutatedJudgeData, note.hitResult.hitDiff, bot, true);
 
@@ -3247,9 +3256,10 @@ class PlayState extends MusicBeatState
 		}else
 			daNote.hitResult.judgment = MISS;
 
-		if(callOnScripts("preNoteMiss", [daNote, field]) == Globals.Function_Stop)
+		if(callOnScripts("onNoteMiss", [daNote, field]) == Globals.Function_Stop)
 			return;
-		if (daNote.noteScript?.call("preNoteMiss", [daNote, field]) == Globals.Function_Stop)
+		
+		if (daNote.noteScript?.call("onNoteMiss", [daNote, field]) == Globals.Function_Stop)
 			return;
 
 		////
@@ -3303,9 +3313,9 @@ class PlayState extends MusicBeatState
 		}
 
 		////
-		callOnScripts("noteMiss", [daNote, field]);
-		daNote.noteScript?.call("noteMiss", [daNote, field]);
-		daNote.genScript?.call("noteMiss", [daNote, field]); 
+		callOnScripts("onNoteMissPost", [daNote, field]);
+		daNote.noteScript?.call("onNoteMissPost", [daNote, field]);
+		daNote.genScript?.call("onNoteMissPost", [daNote, field]); 
 	}
 
 	function noteMissPress(direction:Int = 1, field:PlayField):Void //You pressed a key when there was no notes to press for this key
@@ -3351,19 +3361,22 @@ class PlayState extends MusicBeatState
 
 	function opponentNoteHit(note:Note, field:PlayField):Void
 	{
-		if (note.noteScript?.call("preOpponentNoteHit", [note, field]) == Globals.Function_Stop)
+		if (callOnScripts("onOpponentNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
-		if (callOnScripts("preOpponentNoteHit", [note, field]) == Globals.Function_Stop)
+
+		if (note.noteScript?.call("onOpponentNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
+
 		commonNoteHit(note, field);
 
 		if (!note.isSustainNote && opponentHPDrain > 0 && health > opponentHPDrain)
 			health -= opponentHPDrain;
 
 		// Script shit
-		callOnScripts("opponentNoteHit", [note, field]);
-		note.noteScript?.call("opponentNoteHit", [note, field]);	
-		note.genScript?.call("noteHit", [note, field]);
+		callOnScripts("onOpponentNoteHitPost", [note, field]);
+		note.noteScript?.call("onOpponentNoteHitPost", [note, field]);
+		note.genScript?.call("onOpponentNoteHitPost", [note, field]);
+	
 	}
 
 	function getNoteCharacters(note:Note, field:PlayField):Array<Character> {
@@ -3383,11 +3396,13 @@ class PlayState extends MusicBeatState
 	function commonNoteHit(note:Note, field:PlayField){ // things done by all note hit functions
 		camZooming = true;
 
-		if (note.noteScript?.call("onCommonNoteHitPre", [note, field]) == Globals.Function_Stop)
+		if (note.noteScript?.call("onNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
 
-		if (callOnScripts("onCommonNoteHitPre", [note, field]) == Globals.Function_Stop)
+		if (callOnScripts("onNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
+
+		note.genScript?.call("onNoteHit", [note, field]);
 
 		note.wasGoodHit = true;
 
@@ -3414,9 +3429,11 @@ class PlayState extends MusicBeatState
 			spr.resetAnim = field.autoPlayed ? -1 : 0;
 		}
 
+		callOnScripts("onNoteHitPost", [note, field]);
+		note.noteScript?.call("onNoteHitPost", [note, field]);
+		note.genScript?.call("onNoteHitPost", [note, field]);
+
 		////
-		note.noteScript?.call("onCommonNoteHit", [note, field]);
-		callOnScripts("onCommonNoteHit", [note, field]);
 	}
 
 	inline function playShithound(){
@@ -3431,9 +3448,9 @@ class PlayState extends MusicBeatState
 		if (note.wasGoodHit || (field.autoPlayed && (note.ignoreNote || note.breaksCombo)))
 			return;
 
-		if (note.noteScript?.call("preGoodNoteHit", [note, field]) == Globals.Function_Stop)
+		if (note.noteScript?.call("onGoodNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
-		if (callOnScripts("preGoodNoteHit", [note, field]) == Globals.Function_Stop)
+		if (callOnScripts("onGoodNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
 
 		if (!note.isSustainNote) {
@@ -3489,9 +3506,9 @@ class PlayState extends MusicBeatState
 
 		commonNoteHit(note, field);
 		// Script shit
-		callOnScripts("goodNoteHit", [note, field]);
-		note.noteScript?.call("goodNoteHit", [note, field]);
-		note.genScript?.call("noteHit", [note, field]); // might be useful for some things i.e judge explosions
+		callOnScripts("onGoodNoteHitPost", [note, field]);
+		note.noteScript?.call("onGoodNoteHitPost", [note, field]);
+		note.genScript?.call("onGoodNoteHitPost", [note, field]); // might be useful for some things i.e judge explosions
 	}
 
 	function getFieldFromNote(note:Note){
