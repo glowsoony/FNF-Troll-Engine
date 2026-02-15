@@ -9,7 +9,7 @@ function setupNote(note:Note){
     }
 }
 
-function loadNoteAnims(note){
+function onLoadNoteAnims(note){
 	var anims = NoteAnimations.current.noteAnimations;
     var prefix = StringTools.replace(anims[note.column % anims.length], '0', '');
     

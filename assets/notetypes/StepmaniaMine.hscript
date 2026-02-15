@@ -7,10 +7,10 @@ function setupNote(note:Note){
     note.requiresTap = false; // so you can hold 
 }
 
-function goodNoteHit(note:Note){
+function onGoodNoteHitPost(note:Note){
     FlxG.sound.play(Paths.sound("mineExplode"));
 }
 
-function noteUpdate(note:Note, elapsed:Float){
+function onNoteUpdate(note:Note, elapsed:Float){
 	note.typeOffsetAngle = (Conductor.songPosition / 1000) * 75;
 }

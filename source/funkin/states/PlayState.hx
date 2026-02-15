@@ -1353,10 +1353,12 @@ class PlayState extends MusicBeatState
 		#if ALLOW_DEPRECATION
 		callOnScripts('postModifierRegister'); // deprecated
 		#end
-		callOnScripts('onModifierRegisterPost');
 		signals.onModifierRegisterPost.dispatch();
+		callOnScripts('onModifierRegisterPost');
 
-		callOnScripts("generateModchart"); // this is where scripts should generate modcharts from here on out lol
+		#if ALLOW_DEPRECATION
+		callOnScripts("generateModchart");
+		#end
 	}
 
 	public function startCountdown():Void
@@ -1976,8 +1978,12 @@ class PlayState extends MusicBeatState
 
 		signals.optionsChanged.dispatch(options);
 
+		#if ALLOW_DEPRECATION
 		callOnScripts('optionsChanged', [options]);
 		hudSkinScript?.call("optionsChanged", [options]);
+		#end
+		callOnScripts('onOptionsChanged', [options]);
+		hudSkinScript?.call("onOptionsChanged", [options]);
 	}
 
 	override function draw(){
@@ -3326,7 +3332,7 @@ class PlayState extends MusicBeatState
 					char.missPress(direction, field);
 			}
 
-			callOnScripts('noteMissPress', [direction, field]);
+			callOnScripts('onNoteMissPress', [direction, field]);
 			return;
 		}
 
@@ -3356,7 +3362,7 @@ class PlayState extends MusicBeatState
 				char.missPress(direction, field);
 		}
 
-		callOnScripts('noteMissPress', [direction, field]);
+		callOnScripts('onNoteMissPress', [direction, field]);
 	}
 
 	function opponentNoteHit(note:Note, field:PlayField):Void
@@ -3366,7 +3372,7 @@ class PlayState extends MusicBeatState
 
 		if (note.noteScript?.call("onOpponentNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
-		
+
 		if (!note.isSustainNote && opponentHPDrain > 0 && health > opponentHPDrain)
 			health -= opponentHPDrain;
 
@@ -3845,7 +3851,7 @@ class PlayState extends MusicBeatState
 
 	override public function startOutro(onOutroComplete)
 	{
-		callOnScripts("switchingState");
+		callOnScripts("onStartOutro");
 
 		return super.startOutro(onOutroComplete);
 	}

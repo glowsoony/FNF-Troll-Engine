@@ -27,7 +27,7 @@ class NoteSplash extends NoteObject {
 	{
 		visible = true;
 
-		if (scriptCall(note, "preSetupNoteSplash", [x, y, column, texture, hueColor, satColor, brtColor, note]) == STOP)
+		if (scriptCall(note, "onSetupNoteSplash", [x, y, column, texture, hueColor, satColor, brtColor, note]) == STOP)
 			return;
 
 		setPosition(x, y);
@@ -46,7 +46,7 @@ class NoteSplash extends NoteObject {
 		}
 
 		if (textureLoaded != texture) {
-			if (scriptCall(note, "loadSplashAnims", [texture]) != STOP)
+			if (scriptCall(note, "onLoadSplashAnims", [texture]) != STOP)
 				loadAnims(texture);
 		}
 
@@ -54,12 +54,16 @@ class NoteSplash extends NoteObject {
 		colorSwap.saturation = satColor;
 		colorSwap.brightness = brtColor;
 
-		if (scriptCall(note, "postSetupNoteSplash", [x, y, column, texture, hueColor, satColor, brtColor, note]) != STOP){
+		scriptCall(note, "onSetupNoteSplashPost", [x, y, column, texture, hueColor, satColor, brtColor, note]);
+		
+		if (scriptCall(note, "onPlayNoteSplashAnim", [x, y, column, texture, hueColor, satColor, brtColor, note]) != STOP){
 			var playAnim = 'note$column';
 			if (animationAmount > 1) playAnim += '-${FlxG.random.int(1, animationAmount)}';
 
 			animation.play(playAnim, true);
 			if (animation.curAnim != null) animation.curAnim.frameRate = 24 + FlxG.random.int(-2, 2);
+
+			scriptCall(note, "onPlayNoteSplashAnimPost", [x, y, column, texture, hueColor, satColor, brtColor, note]);
 		}
 	}
 
