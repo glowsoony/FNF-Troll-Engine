@@ -550,8 +550,8 @@ class Note extends NoteObject {
 		if (!changed)
 			_loadNoteAnims();
 
-		noteScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["super" => _loadNoteAnims, "noteAnimsChanged" => changed]);
-		genScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["super" => _loadNoteAnims, "noteAnimsChanged" => changed]);
+		noteScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["noteAnimsChanged" => changed]);
+		genScript.executeFunc("onLoadNoteAnimsPost", [this], null, ["noteAnimsChanged" => changed]);
 
 
 	}

@@ -3366,11 +3366,11 @@ class PlayState extends MusicBeatState
 
 		if (note.noteScript?.call("onOpponentNoteHit", [note, field]) == Globals.Function_Stop)
 			return;
-
-		commonNoteHit(note, field);
-
+		
 		if (!note.isSustainNote && opponentHPDrain > 0 && health > opponentHPDrain)
 			health -= opponentHPDrain;
+
+		commonNoteHit(note, field);
 
 		// Script shit
 		callOnScripts("onOpponentNoteHitPost", [note, field]);

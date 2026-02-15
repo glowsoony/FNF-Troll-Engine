@@ -15,16 +15,39 @@ function onReloadNote(note:Note, prefix:String, texture:String, suffix:String){
     trace("Called at the beginning of the reloadNote function");
 }
 
-function postReloadNote(note:Note, prefix:String, texture:String, suffix:String){
+function onReloadNotePost(note:Note, prefix:String, texture:String, suffix:String){
     trace("Called at the end of the reloadNote function");
 }
 
-function goodNoteHit(note:Note){
-    trace("Called when the player hits the note");
+function onGoodNoteHit(note:Note){
+    trace("Called when the player hits the note.");
+	// you can return Function_Stop to override the functionality of goodNoteHit entirely.
 }
 
-function opponentNoteHit(note:Note){
-    trace("Called when the opponent hits the note");
+function onOpponentNoteHit(note:Note){
+    trace("Called when a non-player hits the note.");
+	// you can return Function_Stop to override the functionality of opponentNoteHit entirely.
+}
+
+function onNoteHit(note:Note){
+    trace("Called when anything hits the note.");
+	// you can return Function_Stop to override the functionality of commonNoteHit entirely.
+}
+
+function onNoteHitPost(note:Note){
+	trace("Called when anything is done hitting the note."); 
+}
+
+function onGoodNoteHitPost(note:Note){
+    trace("Called when the player is done hitting the note");
+}
+
+function onOpponentNoteHitPost(note:Note){
+    trace("Called when the opponent is done hitting the note");
+}
+
+function onNoteTypeSetPost(note: Note){
+	trace("Called when the note type is done being setup for a note.")
 }
 
 function judgeNote(note:Note, msDiff:Float){
@@ -56,26 +79,26 @@ function judgeNote(note:Note, msDiff:Float){
     return Judgement.UNJUDGED; // cant be hit otherwise
 }
 
-function noteMiss(note:Note){
-    trace("Called when the player misses the note");
+function onNoteMiss(note:Note){
+    trace("Called when the player misses the note. Can be cancelled to override noteMiss functionality.");
 }
 
-function update(elapsed:Float){
+function onUpdate(elapsed:Float){
     // gets called once per frame while the note type is in the song. use this to update stuff like hp drain, etc.
     trace("Called every frame the notetype is active");
 }
 
-function noteUpdate(note:Note, elapsed:Float){
+function onNoteUpdate(note:Note, elapsed:Float){
     // gets called by every spawned note per frame, so do this for stuff that should affect each note individually.
     trace("Called every frame the note is active, strumtime: " + note.strumTime);
 }
 
-function spawnNote(note:Note){
+function onSpawnNote(note:Note){
     trace("This is called when a note of the type is spawned!");
     // return Function_Stop to stop the note from spawning
 }
 
-function postSpawnNote(note:Note){
+function onSpawnNotePost(note:Note){
     trace("This is called when the note is actually spawned and added to the group!");
 }
 
@@ -88,12 +111,20 @@ function postSpawnNote(note:Note){
 */
 
 
-function loadNoteAnims(note:Note){
+function onLoadNoteAnims(note:Note){
     super(); // if you dont want FNF's normal note anims to be added, just omit this
     trace("This is called when the note has its animations loaded!");
 }
 
-function loadIndNoteAnims(note:Note){
+function onLoadIndNoteAnims(note:Note){
     super(); // if you dont want FNF's normal note anims to be added, just omit this
     trace("This is called when the note has its animations loaded through indices!"); // pixel notes, etc
+}
+
+function onLoadNoteAnimsPost(note:Note){
+    trace("This is called when the note is done having its animations loaded");
+}
+
+function onLoadIndNoteAnimsPost(note:Note){
+    trace("This is called when the note is done having its animations loaded through indices");
 }
