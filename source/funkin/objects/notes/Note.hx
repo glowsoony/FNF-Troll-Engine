@@ -428,7 +428,7 @@ class Note extends NoteObject {
 		super(NOTE);
 
 		this.strumTime = this.visualTime = strumTime;
-		this.column = column;
+		this.column = this.realColumn = column;
 		this.prevNote = prevNote;
 		this.fieldIndex = fieldIndex;
 		this.holdType = susPart;

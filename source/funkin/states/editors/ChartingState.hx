@@ -714,13 +714,9 @@ class ChartingState extends MusicBeatState
 		addEventsUI();
 		addChartingUI();
 		addTracksUI();
-
-		reloadKeyAnimations(_song.keyCount);
-
-
+		
 		////
-		updateStrumline();
-		adjustCamPos();
+		updateKeyCount(_song.keyCount);
 		changeSection(curSec, false);		
 
 		//
@@ -731,37 +727,43 @@ class ChartingState extends MusicBeatState
 			waveformTrackDropDown.selectedId = "None";
 	}
 
-	function updateStrumline() {
-		strumLineNotes.clear();
+	function updateStrumline() {		
 		var fieldAmount:Int = 2;
-
-		strumLine.setGraphicSize(GRID_SIZE * (1 + _song.keyCount * fieldAmount), 4);
-		strumLine.updateHitbox();
-
 		var totalStrums:Int = _song.keyCount * fieldAmount;
 
-		for (i in 0...totalStrums) {
-			var note:StrumNote = strumLineNotes.members[i];
-			if (note != null) {
-				note.revive();
-				continue;
+		strumLine.setGraphicSize(GRID_SIZE * (1 + totalStrums), 4);
+		strumLine.updateHitbox();
+
+		inline function setupStrum(fieldColumn:Int, posColumn:Int) {
+			var strum:StrumNote = strumLineNotes.recycle();
+			if (strum != null) {
+				strum.column = fieldColumn;
+				strum.reloadNote();
+				strum.revive();
+			}else {
+				strum = new StrumNote(0, 0, fieldColumn);
+				strumLineNotes.add(strum);
 			}
-			
-			note = new StrumNote(GRID_SIZE * (i+1), strumLine.y, i % _song.keyCount);
-			note.playAnim('static', true);
-			note.setGraphicSize(GRID_SIZE, GRID_SIZE);
-			note.updateHitbox();
-			note.scrollFactor.set(1, 1);
-			strumLineNotes.add(note);
+			strum.setPosition(GRID_SIZE * (1 + posColumn), strumLine.y);
+			strum.setGraphicSize(GRID_SIZE, GRID_SIZE);
+			strum.updateHitbox();
+			strum.ID = posColumn;
+			return strum;
 		}
 
-		for (i in totalStrums...strumLineNotes.length) {
-			var note:StrumNote = strumLineNotes.members[i];
-			if (note != null) {
-				note.kill();
-				continue;
-			} 
+		strumLineNotes.killMembers();
+		for (i in 0...totalStrums)
+			setupStrum(i % _song.keyCount, i);
+		
+		/*
+		var eventStrum = setupStrum(-1, -1);
+		if (eventStrum != null) {
+			eventStrum.animation.addByPrefix('static', 'arrowSQUARE', 24, false);
+			eventStrum.animation.addByPrefix('pressed', 'square press', 24, false);
+			eventStrum.animation.addByPrefix('confirm', 'square confirm', 24, false);
+			eventStrum.playAnim('static', true);
 		}
+		*/
 	}
 
 	function loadEventStuff() {
@@ -2045,7 +2047,7 @@ class ChartingState extends MusicBeatState
 		}
 	}
 
-	function reloadKeyAnimations(count:Int) {
+	function updateKeyCount(count:Int) {
 		_song.keyCount = Math.ceil(Math.max(1, count));
 		NoteAnimations.refreshKeyAnimations(_song.keyCount);
 		NoteAnimations.remap4KArray(_song.keyCount, defaultNoteColours, noteColours);
@@ -2098,7 +2100,7 @@ class ChartingState extends MusicBeatState
 					updateNoteSteps();
 				
 				case 'song_keyCount':
-					reloadKeyAnimations(Std.int(nums.value));
+					updateKeyCount(Std.int(nums.value));
 				case 'song_speed':
 					_song.speed = nums.value;
 				
@@ -2499,29 +2501,24 @@ class ChartingState extends MusicBeatState
 			
 			if (note.strumTime <= Conductor.songPosition) {
 				if (inst.playing && !note.wasGoodHit) {
-					if (note.column > -1)
-					{
-						// This is a note.
-
-						if (!note.ignoreNote)
-						{					
-							var strum:StrumNote = strumLineNotes.members[note.realColumn];
-							if (strum != null) {
-								strum.playAnim('confirm', true, note);
-								strum.resetAnim = (note.sustainLength / 1000) + 0.15;
-							}
-
-							if (!note.hitsoundDisabled && (note.mustPress ? options.playSoundBf : options.playSoundDad) && playedSound[note.realColumn] != true) {
+					var strum:StrumNote = strumLineNotes.getFirst(strum -> (strum.exists && strum.ID == note.realColumn));
+					
+					if (note.column >= 0) {
+						if (!note.ignoreNote) {
+							var soundAllowed = !note.hitsoundDisabled && (note.mustPress ? options.playSoundBf : options.playSoundDad);
+							if (soundAllowed && playedSound[note.realColumn] != true) {
 								(options.panHitSounds ? (note.mustPress ? plrHitsound : oppHitsound) : hitsound).play(true);
 								playedSound[note.realColumn] = true;
 							}
-							
 						}
-					}else{
-						// This is an event.
-
+					}else {
 						if (options.playSoundEvents)
 							hitsound.play(true);
+					}
+
+					if (strum != null) {
+						strum.playAnim('confirm', true, note);
+						strum.resetAnim = (note.sustainLength / 1000) + 0.15;
 					}
 				}
 
