@@ -276,6 +276,8 @@ class FunkinHScript extends FunkinScript
 		set("FlxAxes", Wrappers.FlxAxes);
 		set("FlxColor", Wrappers.SowyColor);
 		set("FlxPoint", Wrappers.FlxPoint);
+
+		set("ShaderFilter", openfl.filters.ShaderFilter);
 	}
 
 	private function setVideoVars() {
