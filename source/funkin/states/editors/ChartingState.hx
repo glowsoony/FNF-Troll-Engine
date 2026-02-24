@@ -1479,6 +1479,8 @@ class ChartingState extends MusicBeatState
 		UI_box.addGroup(tab_group_note);
 	}
 
+	var eventLabelStrumTime:FlxText;
+	var eventStepperStrumTime:CustomFlxUINumericStepper;
 	var eventDropDown:FlxUIDropDownMenu;
 	var eventNameInput:FlxUIInputText;
 	var eventDescText:FlxText;
@@ -1499,17 +1501,20 @@ class ChartingState extends MusicBeatState
 		var tab_group_event = new FlxUI(null, UI_box);
 		tab_group_event.name = 'Event';
 
+		final DECIMALS:Int = 4;
+
+		eventStepperStrumTime = new CustomFlxUINumericStepper(20, 25, 1, 0, 0, Math.POSITIVE_INFINITY, DECIMALS, 1, new FlxUIInputText(0, 0, 120));
+		eventStepperStrumTime.name = 'event_strumTime';
+		blockPressWhileTypingOnStepper.push(eventStepperStrumTime);
+
 		eventDescText = new FlxText(20, 200, 0, "");
 
 		var leEvents:Array<String> = [""];
 		for (i in 0...eventStuff.length)
 			leEvents.push(eventStuff[i][0]);
 
-		var text:FlxText = new FlxText(20, 30, 0, "Event:");
-		tab_group_event.add(text);
-
 		eventDropDown = new CustomFlxUIDropDownMenu(
-			20, 50, 
+			20, 80, 
 			FlxUIDropDownMenu.makeStrIdLabelArray(leEvents, true), 
 			function(pressed:String) {
 				var idx:Int = Std.parseInt(pressed);
@@ -1559,11 +1564,11 @@ class ChartingState extends MusicBeatState
 		}
 		eventNameInput.focusLost = () -> onEnterEventName(eventNameInput.text);
 
-		value1InputText = new FlxUIInputText(20, 110, 116, "");
+		value1InputText = new FlxUIInputText(20, 125, 116, "");
 		value1InputText.name = 'event_value1';
 		blockPressWhileTypingOn.push(value1InputText);
 
-		value2InputText = new FlxUIInputText(20, 150, 116, "");
+		value2InputText = new FlxUIInputText(20, 165, 116, "");
 		value2InputText.name = 'event_value2';
 		blockPressWhileTypingOn.push(value2InputText);
 
@@ -1670,11 +1675,14 @@ class ChartingState extends MusicBeatState
 		selectedEventText.alignment = CENTER;
 		tab_group_event.add(selectedEventText);
 
+		tab_group_event.add(eventLabelStrumTime = new FlxText(eventStepperStrumTime.x, eventStepperStrumTime.y - 15, 0, 'Strum time:'));
+		tab_group_event.add(eventStepperStrumTime);
 		tab_group_event.add(eventDescText);
 		tab_group_event.add(new FlxText(value1InputText.x, value1InputText.y - 20, 0, "Value 1:"));	
 		tab_group_event.add(value1InputText);
 		tab_group_event.add(new FlxText(value2InputText.x, value2InputText.y - 20, 0, "Value 2:"));
 		tab_group_event.add(value2InputText);
+		tab_group_event.add(new FlxText(eventDropDown.x, eventDropDown.y - 20, 0, "Event:"));
 		tab_group_event.add(eventDropDown);
 
 		UI_box.addGroup(tab_group_event);
@@ -2146,6 +2154,7 @@ class ChartingState extends MusicBeatState
 					Conductor.mapBPMChanges(_song);
 					updateGrid();
 					updateNoteSteps();
+					updateEventSteps();
 
 				case "check_altAnim":
 					_song.notes[curSec].altAnim = check.checked;
@@ -2162,6 +2171,7 @@ class ChartingState extends MusicBeatState
 					_song.notes[curSec].sectionBeats = nums.value;
 					reloadGridLayer();
 					updateNoteSteps();
+					updateEventSteps();
 				
 				case 'song_keyCount':
 					updateKeyCount(Std.int(nums.value));
@@ -2173,6 +2183,16 @@ class ChartingState extends MusicBeatState
 					Conductor.mapBPMChanges(_song);
 					updateGrid();
 					updateNoteSteps();
+					updateEventSteps();
+
+				case 'event_strumTime':
+					if (curSelectedEvent != null) {
+						curSelectedEvent.strumTime = nums.value;
+						updateGrid();
+						updateEventSteps();
+					} else {
+						sender.value = 0;
+					}
 
 				case 'note_strumTime':
 					if (curSelectedNote != null) {
@@ -2520,6 +2540,7 @@ class ChartingState extends MusicBeatState
 				}
 				reloadGridLayer();
 				updateSectionUI();
+				eventStepperStrumTime.stepSize = Conductor.stepCrochet;
 				stepperStrumTime.stepSize = Conductor.stepCrochet;
 				stepperSusLength.stepSize = Conductor.stepCrochet;
 			}
@@ -2530,6 +2551,7 @@ class ChartingState extends MusicBeatState
 				}
 				reloadGridLayer();
 				updateSectionUI();
+				eventStepperStrumTime.stepSize = Conductor.stepCrochet;
 				stepperStrumTime.stepSize = Conductor.stepCrochet;
 				stepperSusLength.stepSize = Conductor.stepCrochet;
 			}
@@ -3145,6 +3167,7 @@ class ChartingState extends MusicBeatState
 			reloadGridLayer();
 			updateSectionUI();
 		}
+		eventStepperStrumTime.stepSize = Conductor.stepCrochet;
 		stepperStrumTime.stepSize = Conductor.stepCrochet;
 		stepperSusLength.stepSize = Conductor.stepCrochet;
 	}
@@ -3195,15 +3218,16 @@ class ChartingState extends MusicBeatState
 		}
 
 		var strumStep:Float = Conductor.getStep(curSelectedNote.strumTime);
+		var endStep:Float = strumStep;
 		var sustainSteps:Float = 0;
 
 		if (curSelectedNote.sustainLength > 0) {
-			var endStep:Float = Conductor.getStep(curSelectedNote.strumTime + curSelectedNote.sustainLength);
+			endStep = Conductor.getStep(curSelectedNote.strumTime + curSelectedNote.sustainLength);
 			sustainSteps = endStep - strumStep;
 		}
 
 		labelSusLength.text = 'Sustain Length: (${Math.round(sustainSteps)} Steps)';
-		labelStrumTime.text = 'Strum Time: (Step ${strumStep})';
+		labelStrumTime.text = 'Strum Time: (Step ${sustainSteps > 0 ? '$strumStep - $endStep' : '$strumStep'})';
 	}
 
 	function updateNoteUI():Void
@@ -3227,7 +3251,11 @@ class ChartingState extends MusicBeatState
 
 	function updateEventsUI():Void
 	{
+		updateEventSteps();
+
 		if (curSelectedEvent != null) {
+			eventStepperStrumTime.value = curSelectedEvent.strumTime;
+
 			selectedEventText.text = 'Selected Event: ' + (subEventIdx + 1) + ' / ' + curSelectedEvent.subEventsData.length;
 
 			var eventData:PsychSubEventData = curSelectedEvent.subEventsData[subEventIdx];
@@ -3252,6 +3280,16 @@ class ChartingState extends MusicBeatState
 		}else {
 			selectedEventText.text = 'Selected Event: None';
 		}
+	}
+
+	function updateEventSteps() {
+		if (curSelectedEvent == null) {
+			labelStrumTime.text = '';
+			return;
+		}
+
+		var strumStep:Float = Conductor.getStep(curSelectedEvent.strumTime);
+		eventLabelStrumTime.text = 'Strum Time: (Step $strumStep)';
 	}
 	
 	inline function fuckFloatingPoints(n:Float):Float // haha decimals
