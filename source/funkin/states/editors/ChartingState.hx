@@ -1,5 +1,6 @@
 package funkin.states.editors;
 
+import funkin.objects.ui.ColorPicker;
 import flixel.util.FlxStringUtil;
 import funkin.Conductor;
 import funkin.data.SongEventData;
@@ -681,6 +682,7 @@ class ChartingState extends MusicBeatState
 		addNoteUI();
 		addEventsUI();
 		addChartingUI();
+		addCustomizeUI();
 		addTracksUI();
 		
 		////
@@ -1937,6 +1939,14 @@ class ChartingState extends MusicBeatState
 		blockPressWhileTypingOnStepper.push(metronomeStepper);
 		blockPressWhileTypingOnStepper.push(metronomeOffsetStepper);
 
+		////
+		var customizeButton:FlxButton = new FlxButton(300 / 2, 400 - 20, 'Customize', function() {
+			UI_box.selected_tab_id = "Customize";
+		});
+		customizeButton.x -= customizeButton.width / 2;
+		customizeButton.y -= customizeButton.height + 16;
+
+		////
 		tab_group_chart.add(sliderHitVol);
 		tab_group_chart.add(sliderRate);
 
@@ -1963,7 +1973,52 @@ class ChartingState extends MusicBeatState
 		tab_group_chart.add(waveformTrackDropDown);
 		tab_group_chart.add(trackVolumeSlider);
 
+		tab_group_chart.add(customizeButton);
+
 		UI_box.addGroup(tab_group_chart);
+	}
+
+	function addCustomizeUI() {
+		var tab_group = new FlxUI(null, UI_box);
+		tab_group.name = 'Customize';
+
+		function color1Changed(v:FlxColor) {
+			options.gridColor1 = v;
+			reloadGridLayer(false);
+			saveOptions();
+		}
+
+		function color2Changed(v:FlxColor) {
+			options.gridColor2 = v;
+			reloadGridLayer(false);
+			saveOptions();
+		}
+
+		var changeColor1 = new ColorPicker(0, 0, "Color 1", color1Changed, options.gridColor1);
+		var changeColor2 = new ColorPicker(0, 0, "Color 2", color2Changed, options.gridColor2);
+
+		var resetButt = new FlxButton('Reset');
+		resetButt.allowSwiping = false;
+		resetButt.onUp.callback = function() {
+			options.gridColor1 = 0xffe7e6e6;
+			options.gridColor2 = 0xffd9d5d5;
+			saveOptions();
+			
+			changeColor1.color = options.gridColor1;
+			changeColor2.color = options.gridColor2;
+			reloadGridLayer(false);
+		}
+
+		changeColor1.setPosition(10, 26);
+		changeColor2.setPosition(10, changeColor1.y + 20);
+		resetButt.setPosition(10, changeColor2.y + 24);
+
+		tab_group.add(new FlxText(10, changeColor1.y - 16, 'Grid color'));
+		tab_group.add(changeColor1);
+		tab_group.add(changeColor2);
+		tab_group.add(resetButt);
+
+		UI_box.addGroup(tab_group);
 	}
 
 	function addTracksUI() {
@@ -2860,7 +2915,7 @@ class ChartingState extends MusicBeatState
 	var currentSectionEnd:Float = 0;
 
 	/** Creates the currently visible sections grid background and their objects (notes, events, waveform) **/
-	function reloadGridLayer() 
+	function reloadGridLayer(updateObjects:Bool = true) 
 	{
 		wipeGroup(gridLayer);
 		
@@ -2955,8 +3010,10 @@ class ChartingState extends MusicBeatState
 			fieldSeparators.add(gridBlackLine);
 		}
 
-		updateWaveform();
-		updateGrid();
+		if (updateObjects) {
+			updateWaveform();
+			updateGrid();
+		}
 	}
 
 	function strumLineUpdateY()
@@ -3723,6 +3780,10 @@ class ChartingState extends MusicBeatState
 	function autosaveSong():Void
 	{		
 		options.autosave = Json.stringify(_song);
+		saveOptions();
+	}
+
+	function saveOptions() {
 		FlxG.save.data.chartingStateOptions = options;
 		FlxG.save.flush();
 	}
@@ -3816,6 +3877,8 @@ class ChartingState extends MusicBeatState
 			script.stop();
 		}
 		hudSkinScripts.clear();
+
+		saveOptions();
 		
 		if (_session != null) {
 			_session.curSec = curSec;
